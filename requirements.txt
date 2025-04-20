@@ -1,0 +1,5 @@
+# manage package
+
+pip install opencv-python
+pip install PyQt5
+pip install torch torchvision torchaudio
