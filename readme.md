@@ -1,4 +1,4 @@
-# YOLOv5 Detector
+# YOLO Detector
 
 A modular GUI application for object detection using YOLOv5.
 
