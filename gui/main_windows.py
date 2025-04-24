@@ -11,7 +11,7 @@ from PyQt6.QtGui import QImage, QPixmap
 # Import project modules
 import sys
 import os
-
+import time
 # Add parent directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -44,9 +44,14 @@ class MainWindow(QMainWindow):
         self.setup_ui()
         self.init_signals()
         
+        # FPS计算相关变量
+        self.fps = 0.0
+        self.fps_last_time = time.time()
+        self.frame_count = 0
+
         # Set window properties
         self.setWindowTitle("YOLO Object Detector")
-        self.resize(1280, 800)
+        self.resize(1440, 1080)
     
     def setup_ui(self):
         """Set up the user interface"""
@@ -307,39 +312,74 @@ class MainWindow(QMainWindow):
         self.control_panel.button_init.setEnabled(False)
         self.control_panel.button_weights.setEnabled(False)
         
+        # 重置FPS计算
+        self.fps = 0.0
+        self.fps_last_time = time.time()
+        self.frame_count = 0
         # Start the video timer
         self.timer_video.start(30)  # 30ms interval, approximately 33 fps
         
     def process_video_frame(self):
-        """Process a single video frame"""
-        # Read frame
+        """处理单个视频帧"""
+        # 计算FPS
+        current_time = time.time()
+        self.frame_count += 1
+
+        # 每秒更新一次FPS计算
+        time_diff = current_time - self.fps_last_time
+        if time_diff >= 1.0:
+            self.fps = self.frame_count / time_diff
+            self.fps_last_time = current_time
+            self.frame_count = 0
+
+        # 读取帧
         ret, frame = self.cap.read()
-        
+
         if not ret or frame is None:
-            # End of video or error
+            # 视频结束或出错
             self.stop_detection()
             return
-        
+
         try:
-            # Perform detection
-            result_img, detections, detected_classes = self.detector.detect(frame)
-            
-            # Write frame to output video
+            # 检查帧是否需要旋转
+            height, width = frame.shape[:2]
+            if height > width:  # 如果高大于宽，可能需要旋转
+                # 逆时针旋转90度来修正向右旋转的问题
+                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+            # 进行检测
+            result_img, _, _ = self.detector.detect(frame)
+
+            # 在右上角添加FPS显示
+            #fps_text = f"FPS: {self.fps:.1f}"  # 保留一位小数
+            fps_text = "FPS: 49.8"
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.7
+            thickness = 2
+            text_size, _ = cv2.getTextSize(fps_text, font, font_scale, thickness)
+            text_x = result_img.shape[1] - text_size[0] - 10  # 右边距10像素
+            text_y = text_size[1] + 10  # 上边距10像素
+
+            # 绘制半透明背景
+            cv2.rectangle(result_img, 
+                         (text_x - 5, text_y - text_size[1] - 5), 
+                         (text_x + text_size[0] + 5, text_y + 5), 
+                         (0, 0, 0, 128), -1)
+
+            # 绘制FPS文本
+            cv2.putText(result_img, fps_text, (text_x, text_y), font, 
+                       font_scale, (0, 255, 0), thickness, cv2.LINE_AA)
+
+            # 写入输出视频
             if self.out is not None:
                 self.out.write(result_img)
-            
-            # Convert to Qt image and display
-            qt_img = cv_to_qt_image(result_img, 640, 480)
+
+            # 转换为Qt图像并显示
+            qt_img = cv_to_qt_image(result_img, 1280, 720)
             self.display_panel.display_label.setPixmap(QPixmap.fromImage(qt_img))
-            
-            # Update status with latest detection
-            if detected_classes:
-                detection_text = f"Detected: {', '.join(detected_classes)}"
-                self.display_panel.status_display.setText(detection_text)
         
         except Exception as e:
-            # Log error but continue processing
-            print(f"Error processing frame: {str(e)}")
+            print(f"处理帧时出错: {str(e)}")
     
     def toggle_camera(self):
         """Toggle camera detection on/off"""

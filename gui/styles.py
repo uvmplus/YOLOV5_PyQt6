@@ -142,4 +142,4 @@ def get_video_type_filter():
 
 def get_weights_type_filter():
     """Return file filter for weights selection dialog"""
-    return "Weights Files (*.pt);;All Files (*)"
+    return "Weights Files (*.pt,*.onnx,*.engine);;All Files (*)"

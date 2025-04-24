@@ -63,27 +63,25 @@ class ControlPanel(QtWidgets.QWidget):
         detect_layout.addWidget(self.button_camera)
         layout.addWidget(self.detect_group)
         
+        # 在ControlPanel类的setup_ui方法中修改视频控制部分:
         # Video controls group
         self.control_group = QGroupBox("Video Controls")
         control_layout = QVBoxLayout(self.control_group)
-        
-        buttons_layout = QHBoxLayout()
-        # adjust video controls button
-        buttons_layout.setSpacing(20)  # Add space between buttons
 
+        # 直接将按钮添加到垂直布局
         self.button_stop = QPushButton("Pause")
         self.button_stop.setObjectName("pushButton_stop")
         self.button_stop.setIcon(QtGui.QIcon.fromTheme("media-playback-pause"))
         self.button_stop.setEnabled(False)
-        
+
         self.button_finish = QPushButton("Stop")
         self.button_finish.setObjectName("pushButton_finish")
         self.button_finish.setIcon(QtGui.QIcon.fromTheme("media-playback-stop"))
         self.button_finish.setEnabled(False)
-        
-        buttons_layout.addWidget(self.button_stop)
-        buttons_layout.addWidget(self.button_finish)
-        control_layout.addLayout(buttons_layout)
+
+        # 垂直添加按钮（上下排列）
+        control_layout.addWidget(self.button_stop)
+        control_layout.addWidget(self.button_finish)
         layout.addWidget(self.control_group)
         
         # Add stretch to push info to bottom

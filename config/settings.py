@@ -65,4 +65,4 @@ def get_default_args():
 
 # Application constants
 APP_NAME = "YOLO Detector"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0"
